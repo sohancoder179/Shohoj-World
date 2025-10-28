@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shohoj World - Earn Money</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<!-- হেডার -->
+<header class="bg-gradient-to-r from-purple-700 to-pink-500 text-white p-4 flex items-center space-x-4 shadow-lg">
+    <img id="userPhoto" src="https://via.placeholder.com/50" class="w-12 h-12 rounded-full border-2 border-white"/>
+    <div class="flex-1">
+        <h1 id="userName" class="text-lg font-bold">Guest User</h1>
+        <p id="userUsername" class="text-sm opacity-80">@guest</p>
+    </div>
+    <div class="text-right">
+        <p class="text-xs">লেভেল <span id="userLevel" class="font-bold">1</span></p>
+        <div class="w-20 bg-gray-300 rounded-full h-2">
+            <div id="levelProgress" class="bg-yellow-400 h-2 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
+</header>
+
+<main class="p-4 flex-grow max-w-3xl mx-auto w-full space-y-4">
+    <!-- স্ট্যাটাস কার্ড -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="bg-white rounded-xl p-4 shadow text-center">
+            <p class="text-sm text-gray-500">মোট ব্যালেন্স</p>
+            <p id="balance" class="text-2xl font-bold text-purple-700">0.00 ৳</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow text-center">
+            <p class="text-sm text-gray-500">মোট অ্যাড</p>
+            <p id="totalAds" class="text-2xl font-bold text-pink-600">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow text-center">
+            <p class="text-sm text-gray-500">রেফারেল</p>
+            <p id="totalRefs" class="text-2xl font-bold text-green-600">0</p>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow text-center">
+            <p class="text-sm text-gray-500">লেভেল</p>
+            <p id="levelDisplay" class="text-2xl font-bold text-blue-600">1</p>
+        </div>
+    </section>
+
+    <!-- ডেইলি বোনাস -->
+    <section class="bg-white p-6 rounded-xl shadow text-center">
+        <p class="mb-4 text-lg font-semibold text-gray-600">🎁 ডেইলি বোনাস নিন</p>
+        <button id="dailyBonus" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg w-full max-w-xs mx-auto">
+            <i class="fas fa-gift mr-2"></i>ডেইলি বোনাস (৫ টাকা)
+        </button>
+        <p id="bonusTime" class="text-sm text-gray-500 mt-2">আগামী বোনাস: 24:00:00</p>
+    </section>
+
+    <!-- বিজ্ঞাপন দেখে আয় -->
+    <section class="bg-white p-6 rounded-xl shadow text-center">
+        <p class="mb-4 text-lg font-semibold text-gray-600">📺 বিজ্ঞাপন দেখে আয় করুন</p>
+        <button id="watchAd" class="bg-purple-700 hover:bg-purple-800 text-white font-bold py-4 px-6 rounded-lg shadow-lg w-full max-w-xs mx-auto">
+            <i class="fas fa-play-circle mr-2"></i>বিজ্ঞাপন দেখুন (<span id="adRate">0.50</span> টাকা)
+        </button>
+        <p class="text-xs text-gray-500 mt-2">প্রতি ১০টি অ্যাডে ১ লেভেল আপ!</p>
+    </section>
+
+    <!-- Monetag Special Ads -->
+    <section id="monetagSection" class="bg-yellow-100 border border-yellow-400 p-6 rounded-xl shadow text-center hidden">
+        <p class="mb-4 text-lg font-semibold text-yellow-700">🎯 বিশেষ অফার! Monetag অ্যাড</p>
+        <p class="text-sm text-yellow-600 mb-3" id="monetagMessage">এই অ্যাড দেখে বেশি আয় করুন!</p>
+        <button id="watchMonetagAd" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg w-full max-w-xs mx-auto">
+            <i class="fas fa-star mr-2"></i>Monetag অ্যাড দেখুন (<span id="monetagEarnings">0.25</span> টাকা)
+        </button>
+    </section>
+
+    <!-- রেফারেল সিস্টেম -->
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-bold mb-4 text-center"><i class="fas fa-users mr-2"></i>বন্ধুকে আমন্ত্রণ করুন</h3>
+        <p class="mb-2 text-center">প্রতিবন্ধুকে <span id="refBonus" class="text-green-600 font-bold">4.00</span> টাকা বোনাস পাবেন!</p>
+        <div class="flex space-x-2 mb-3">
+            <input type="text" id="refLink" class="border p-2 rounded flex-1 text-sm" readonly>
+            <button onclick="copyRefLink()" class="bg-blue-600 text-white p-2 rounded">
+                <i class="fas fa-copy"></i>
+            </button>
+            <button onclick="shareRefLink()" class="bg-green-600 text-white p-2 rounded">
+                <i class="fas fa-share"></i>
+            </button>
+        </div>
+        <div class="text-center">
+            <p class="text-sm">আপনি রেফার করেছেন: <span id="refCount" class="font-bold">0</span> জন</p>
+            <p class="text-xs text-gray-500 mt-1">বন্ধু লিংক দিয়ে বটে জয়েন করলে অটো বোনাস!</p>
+        </div>
+    </section>
+
+    <!-- টাকা তোলার সিস্টেম -->
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-bold mb-4 text-center"><i class="fas fa-wallet mr-2"></i>টাকা তুলুন</h3>
+        <div class="space-y-3">
+            <select id="withdrawMethod" class="border p-2 rounded w-full">
+                <option value="bkash">bKash</option>
+                <option value="nagad">Nagad</option>
+                <option value="rocket">Rocket</option>
+            </select>
+            <input type="text" id="accountNumber" class="border p-2 rounded w-full" placeholder="আপনার একাউন্ট নম্বর">
+            <input type="number" id="withdrawAmount" class="border p-2 rounded w-full" placeholder="টাকার পরিমাণ (ন্যূনতম ১০ টাকা)">
+            <button onclick="withdrawMoney()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg w-full">
+                <i class="fas fa-paper-plane mr-2"></i>টাকা তুলুন
+            </button>
+        </div>
+    </section>
+
+    <!-- টাস্ক সিস্টেম -->
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-bold mb-4 text-center"><i class="fas fa-tasks mr-2"></i>টাস্ক সম্পন্ন করুন</h3>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center p-3 border rounded">
+                <span><i class="fab fa-telegram mr-2 text-blue-500"></i>Telegram চ্যানেল জয়েন করুন</span>
+                <button onclick="completeTask('telegram')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">করুন</button>
+            </div>
+            <div class="flex justify-between items-center p-3 border rounded">
+                <span><i class="fab fa-youtube mr-2 text-red-500"></i>YouTube সাবস্ক্রাইব করুন</span>
+                <button onclick="completeTask('youtube')" class="bg-red-600 text-white px-3 py-1 rounded text-sm">করুন</button>
+            </div>
+            <div class="flex justify-between items-center p-3 border rounded">
+                <span><i class="fab fa-facebook mr-2 text-blue-600"></i>Facebook এ শেয়ার করুন</span>
+                <button onclick="completeTask('facebook')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm">করুন</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- লিডারবোর্ড -->
+    <section class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-bold mb-4 text-center"><i class="fas fa-trophy mr-2"></i>লিডারবোর্ড</h3>
+        <div id="leaderboard" class="space-y-2">
+            <div class="text-center text-gray-500">লোড হচ্ছে...</div>
+        </div>
+    </section>
+</main>
+
+<script>
+// ইউজার ডেটা
+let user = { 
+    id: "guest", 
+    name: "Guest", 
+    username: "guest", 
+    photo: "https://via.placeholder.com/50", 
+    balance: 0, 
+    totalAds: 0, 
+    totalRefs: 0,
+    level: 1,
+    lastBonus: null,
+    completedTasks: [],
+    withdrawHistory: [],
+    lastMonetagAd: null,
+    monetagAdsWatched: 0
+};
+
+// Monetag Ad System
+let monetagAds = [
+    { id: 1, name: "Monetag Premium Ad 1", earnings: 0.25, shown: false },
+    { id: 2, name: "Monetag Premium Ad 2", earnings: 0.30, shown: false },
+    { id: 3, name: "Monetag Premium Ad 3", earnings: 0.35, shown: false },
+    { id: 4, name: "Monetag Premium Ad 4", earnings: 0.40, shown: false },
+    { id: 5, name: "Monetag Premium Ad 5", earnings: 0.45, shown: false }
+];
+
+// টেলিগ্রাম ইউজার ডিটেক্ট
+if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    let tg = window.Telegram.WebApp.initDataUnsafe.user;
+    user.id = tg.id.toString();
+    user.name = tg.first_name + (tg.last_name ? " " + tg.last_name : "");
+    user.username = tg.username || "guest";
+    user.photo = tg.photo_url || "https://via.placeholder.com/50";
+}
+
+// UI আপডেট
+function updateUI() {
+    document.getElementById("userName").innerText = user.name;
+    document.getElementById("userUsername").innerText = "@" + user.username;
+    document.getElementById("userPhoto").src = user.photo;
+    document.getElementById("balance").innerText = user.balance.toFixed(2) + " ৳";
+    document.getElementById("totalAds").innerText = user.totalAds;
+    document.getElementById("totalRefs").innerText = user.totalRefs;
+    document.getElementById("userLevel").innerText = user.level;
+    document.getElementById("levelDisplay").innerText = user.level;
+    document.getElementById("refCount").innerText = user.totalRefs;
+    
+    // লেভেল প্রোগ্রেস আপডেট
+    let progress = (user.totalAds % 10) * 10;
+    document.getElementById("levelProgress").style.width = progress + "%";
+    
+    generateRefLink();
+    updateBonusTimer();
+    checkMonetagAd();
+}
+
+// Monetag Ad চেক করুন
+function checkMonetagAd() {
+    let monetagSection = document.getElementById("monetagSection");
+    let now = new Date().getTime();
+    let lastMonetag = user.lastMonetagAd ? new Date(user.lastMonetagAd).getTime() : 0;
+    
+    // প্রতি ১০টি অ্যাডে অথবা র‍্যান্ডম সময়ে Monetag Ad দেখান
+    let showMonetag = false;
+    let monetagMessage = "";
+    
+    if (user.totalAds > 0 && user.totalAds % 10 === 0) {
+        // প্রতি ১০টি অ্যাডে লেভেল আপ এড
+        showMonetag = true;
+        monetagMessage = "🎉 লেভেল আপ বোনাস! বিশেষ Monetag অ্যাড";
+    } else if (Math.random() < 0.3 && now - lastMonetag > 30 * 60 * 1000) {
+        // ৩০% সম্ভাবনা এবং শেষ Monetag Ad থেকে ৩০ মিনিট পর
+        showMonetag = true;
+        monetagMessage = "🎯 বিশেষ অফার! Monetag প্রিমিয়াম অ্যাড";
+    }
+    
+    if (showMonetag) {
+        let availableAds = monetagAds.filter(ad => !ad.shown);
+        if (availableAds.length === 0) {
+            // সব Ads দেখানো হয়ে গেলে রিসেট করুন
+            monetagAds.forEach(ad => ad.shown = false);
+            availableAds = monetagAds;
+        }
+        
+        let randomAd = availableAds[Math.floor(Math.random() * availableAds.length)];
+        document.getElementById("monetagEarnings").innerText = randomAd.earnings.toFixed(2);
+        document.getElementById("monetagMessage").innerText = monetagMessage;
+        monetagSection.classList.remove("hidden");
+        
+        // Monetag Ad বাটন এভেন্ট যোগ করুন
+        document.getElementById("watchMonetagAd").onclick = function() {
+            watchMonetagAd(randomAd);
+        };
+    } else {
+        monetagSection.classList.add("hidden");
+    }
+}
+
+// Monetag Ad দেখুন
+function watchMonetagAd(ad) {
+    // Monetag Ad সিমুলেশন
+    let adView = confirm(`🎯 ${ad.name}\n\nএই অ্যাড দেখে আপনি ${ad.earnings.toFixed(2)} টাকা পাবেন!\n\nঅ্যাড দেখতে "OK" ক্লিক করুন।`);
+    
+    if (adView) {
+        // কাউন্টডাউন টাইমার
+        let seconds = 5;
+        let timer = setInterval(function() {
+            if (seconds > 0) {
+                document.getElementById("watchMonetagAd").innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>অ্যাড লোড হচ্ছে... (${seconds}s)`;
+                seconds--;
+            } else {
+                clearInterval(timer);
+                
+                // পেমেন্ট প্রসেস
+                user.balance += ad.earnings;
+                user.totalAds++;
+                user.monetagAdsWatched = (user.monetagAdsWatched || 0) + 1;
+                user.lastMonetagAd = new Date().toISOString();
+                ad.shown = true;
+                
+                // লেভেল চেক করুন
+                checkLevelUp();
+                
+                saveUser();
+                updateUI();
+                
+                alert(`✅ ${ad.name} সম্পন্ন!\n💰 ${ad.earnings.toFixed(2)} টাকা যোগ হয়েছে!\n\nমোট ব্যালেন্স: ${user.balance.toFixed(2)} টাকা`);
+            }
+        }, 1000);
+    }
+}
+
+// লেভেল আপ চেক করুন
+function checkLevelUp() {
+    let oldLevel = user.level;
+    let newLevel = Math.floor(user.totalAds / 10) + 1;
+    
+    if (newLevel > oldLevel) {
+        user.level = newLevel;
+        let levelBonus = newLevel * 2; // লেভেল অনুযায়ী বোনাস
+        user.balance += levelBonus;
+        
+        alert(`🎉 অভিনন্দন! আপনি লেভেল ${newLevel} এ পৌঁছেছেন!\n\n💰 লেভেল বোনাস: ${levelBonus} টাকা\n\nমোট ব্যালেন্স: ${user.balance.toFixed(2)} টাকা`);
+    }
+}
+
+// রেফারেল লিংক
+function generateRefLink() {
+    let botUsername = "Shohoj_World_V3_bot";
+    let refLink = `https://t.me/${botUsername}?start=ref${user.id}`;
+    document.getElementById("refLink").value = refLink;
+}
+
+// লিংক কপি
+function copyRefLink() {
+    let link = document.getElementById("refLink");
+    link.select();
+    document.execCommand("copy");
+    alert("✅ রেফারেল লিংক কপি হয়েছে!");
+}
+
+// শেয়ার লিংক
+function shareRefLink() {
+    let link = document.getElementById("refLink").value;
+    if (navigator.share) {
+        navigator.share({
+            title: 'Shohoj World - টাকা ইনকাম করুন',
+            text: 'বিজ্ঞাপন দেখে টাকা ইনকাম করুন! আমার রেফারেল লিংক:',
+            url: link
+        });
+    } else {
+        alert("শেয়ার অপশন সাপোর্ট করে না। লিংকটি ম্যানুয়ালি শেয়ার করুন:\n" + link);
+    }
+}
+
+// ডেইলি বোনাস
+document.getElementById("dailyBonus").addEventListener("click", function() {
+    let now = new Date().getTime();
+    let lastBonus = user.lastBonus ? new Date(user.lastBonus).getTime() : 0;
+    
+    if (now - lastBonus >= 24 * 60 * 60 * 1000) {
+        user.balance += 5;
+        user.lastBonus = new Date().toISOString();
+        saveUser();
+        updateUI();
+        alert(`🎉 ডেইলি বোনাস পেয়েছেন ৫ টাকা!`);
+    } else {
+        alert("⚠️ আপনি ইতিমধ্যে আজকের বোনাস নিয়েছেন! আগামীকাল আবার চেষ্টা করুন।");
+    }
+});
+
+// বোনাস টাইমার
+function updateBonusTimer() {
+    let bonusBtn = document.getElementById("dailyBonus");
+    let bonusTime = document.getElementById("bonusTime");
+    
+    if (user.lastBonus) {
+        let lastBonusTime = new Date(user.lastBonus).getTime();
+        let nextBonusTime = lastBonusTime + (24 * 60 * 60 * 1000);
+        let now = new Date().getTime();
+        
+        if (now < nextBonusTime) {
+            let timeLeft = nextBonusTime - now;
+            let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            bonusTime.innerText = `আগামী বোনাস: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            bonusBtn.disabled = true;
+            bonusBtn.classList.add("opacity-50");
+        } else {
+            bonusTime.innerText = "বোনাস প্রস্তুত!";
+            bonusBtn.disabled = false;
+            bonusBtn.classList.remove("opacity-50");
+        }
+    } else {
+        bonusTime.innerText = "বোনাস প্রস্তুত!";
+    }
+}
+
+// টাকা তোলা
+function withdrawMoney() {
+    let method = document.getElementById("withdrawMethod").value;
+    let account = document.getElementById("accountNumber").value;
+    let amount = parseFloat(document.getElementById("withdrawAmount").value);
+    
+    if (!account) {
+        alert("⚠️ একাউন্ট নম্বর দিন!");
+        return;
+    }
+    
+    if (amount < 10) {
+        alert("⚠️ ন্যূনতম ১০ টাকা তুলতে হবে!");
+        return;
+    }
+    
+    if (user.balance < amount) {
+        alert("⚠️ আপনার ব্যালেন্স অপর্যাপ্ত!");
+        return;
+    }
+    
+    if (confirm(`✅ ${amount} টাকা ${method} এ তুলবেন?\n\nএকাউন্ট: ${account}`)) {
+        user.balance -= amount;
+        user.withdrawHistory.push({
+            method: method,
+            account: account,
+            amount: amount,
+            date: new Date().toISOString(),
+            status: "pending"
+        });
+        saveUser();
+        alert("✅ উইথড্র রিকোয়েস্ট সাবমিট হয়েছে! ২৪ ঘন্টার মধ্যে পেমেন্ট করা হবে।");
+        updateUI();
+    }
+}
+
+// টাস্ক সম্পন্ন
+function completeTask(taskType) {
+    if (!user.completedTasks.includes(taskType)) {
+        user.completedTasks.push(taskType);
+        user.balance += 2; // প্রতিটি টাস্কের জন্য ২ টাকা
+        saveUser();
+        updateUI();
+        alert(`✅ টাস্ক সম্পন্ন! ২ টাকা বোনাস পেয়েছেন!`);
+    } else {
+        alert("⚠️ আপনি ইতিমধ্যে এই টাস্কটি সম্পন্ন করেছেন!");
+    }
+}
+
+// লিডারবোর্ড লোড
+function loadLeaderboard() {
+    // GitHub Pages এ JSON ফাইল লোড
+    fetch('./users.json')
+        .then(response => response.json())
+        .then(users => {
+            let leaderboard = Object.values(users)
+                .sort((a, b) => b.balance - a.balance)
+                .slice(0, 5);
+            
+            let leaderboardHTML = "";
+            leaderboard.forEach((user, index) => {
+                let medal = "";
+                if (index === 0) medal = "🥇";
+                else if (index === 1) medal = "🥈";
+                else if (index === 2) medal = "🥉";
+                
+                leaderboardHTML += `
+                    <div class="flex justify-between items-center p-3 border-b">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold">${medal} ${index + 1}.</span>
+                            <img src="${user.photo}" class="w-8 h-8 rounded-full">
+                            <span class="truncate max-w-20">${user.name}</span>
+                        </div>
+                        <span class="font-bold text-purple-700">${user.balance.toFixed(2)} ৳</span>
+                    </div>
+                `;
+            });
+            
+            if (leaderboard.length === 0) {
+                leaderboardHTML = `<p class="text-center text-gray-500">এখনও কোন ডেটা নেই</p>`;
+            }
+            
+            document.getElementById("leaderboard").innerHTML = leaderboardHTML;
+        })
+        .catch(error => {
+            console.log('GitHub users.json load failed, using localStorage');
+            // Fallback to localStorage
+            let localUsers = JSON.parse(localStorage.getItem('shohoj_users')) || {};
+            let leaderboard = Object.values(localUsers)
+                .sort((a, b) => b.balance - a.balance)
+                .slice(0, 5);
+            
+            let leaderboardHTML = "";
+            leaderboard.forEach((user, index) => {
+                leaderboardHTML += `
+                    <div class="flex justify-between items-center p-3 border-b">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold">${index + 1}.</span>
+                            <span>${user.name}</span>
+                        </div>
+                        <span class="font-bold text-purple-700">${user.balance.toFixed(2)} ৳</span>
+                    </div>
+                `;
+            });
+            
+            document.getElementById("leaderboard").innerHTML = leaderboardHTML || '<p class="text-center text-gray-500">এখনও কোন ডেটা নেই</p>';
+        });
+}
+
+// ইউজার সেভ (GitHub Pages ভার্সন)
+function saveUser() {
+    // localStorage এ সেভ
+    let users = JSON.parse(localStorage.getItem('shohoj_users')) || {};
+    users[user.id] = user;
+    localStorage.setItem('shohoj_users', JSON.stringify(users));
+    
+    // এডমিন এর জন্য বিশেষ (আপনার আইডি হলে)
+    if (user.id === "7231743379") {
+        console.log("Admin data saved to localStorage");
+    }
+}
+
+// ইউজার লোড (GitHub Pages ভার্সন)
+function loadUser() {
+    // প্রথমে localStorage চেক
+    let localUsers = JSON.parse(localStorage.getItem('shohoj_users')) || {};
+    if (localUsers[user.id]) {
+        user = {...user, ...localUsers[user.id]};
+        updateUI();
+        return;
+    }
+    
+    // Fallback: GitHub users.json
+    fetch('./users.json')
+        .then(r => r.json())
+        .then(users => {
+            if (users[user.id]) {
+                user = {...user, ...users[user.id]};
+                updateUI();
+            }
+        })
+        .catch(error => {
+            console.log('Both localStorage and GitHub failed');
+        });
+}
+
+// সেটিংস লোড
+function loadSettings() {
+    // GitHub থেকে settings লোড
+    fetch('./zone.json')
+        .then(r => r.json())
+        .then(settings => {
+            document.getElementById("adRate").innerText = (settings.adRate || 0.50).toFixed(2);
+            document.getElementById("refBonus").innerText = (settings.refBonus || 4.00).toFixed(2);
+        })
+        .catch(error => {
+            // Fallback to default
+            document.getElementById("adRate").innerText = "0.50";
+            document.getElementById("refBonus").innerText = "4.00";
+        });
+}
+
+// ইনিশিয়াল লোড
+document.addEventListener('DOMContentLoaded', function() {
+    loadUser();
+    loadLeaderboard();
+    loadSettings();
+    
+    // বোনাস টাইমার আপডেট
+    setInterval(updateBonusTimer, 1000);
+    
+    // জোন লোড (যদি থাকে)
+    fetch('./zone.json')
+        .then(r => r.json())
+        .then(data => {
+            if (data.zoneId && window.showGiga) {
+                let script = document.createElement("script");
+                script.src = `https://ad.gigapub.tech/script?id=${data.zoneId}`;
+                document.body.appendChild(script);
+            }
+        });
+});
+
+// বিজ্ঞাপন দেখার ফাংশন
+document.getElementById("watchAd").addEventListener("click", () => {
+    // Ad rate from settings or default
+    let adRate = 0.50;
+    
+    if (window.showGiga) {
+        window.showGiga().then(() => {
+            user.totalAds++;
+            user.balance += adRate;
+            
+            // লেভেল আপ চেক করুন
+            checkLevelUp();
+            // Monetag Ad চেক করুন
+            checkMonetagAd();
+            
+            saveUser();
+            updateUI();
+        }).catch(() => {
+            // Fallback for testing
+            user.totalAds++;
+            user.balance += adRate;
+            checkLevelUp();
+            checkMonetagAd();
+            saveUser();
+            updateUI();
+            alert(`✅ অ্যাড সম্পন্ন! ${adRate.toFixed(2)} টাকা পেয়েছেন!`);
+        });
+    } else {
+        // Direct fallback
+        user.totalAds++;
+        user.balance += adRate;
+        checkLevelUp();
+        checkMonetagAd();
+        saveUser();
+        updateUI();
+        alert(`✅ অ্যাড সম্পন্ন! ${adRate.toFixed(2)} টাকা পেয়েছেন!`);
+    }
+});
+</script>
+</body>
+</html>
